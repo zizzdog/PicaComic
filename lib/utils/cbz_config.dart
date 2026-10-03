@@ -76,4 +76,41 @@ class CbzConfig {
     final sp = await SharedPreferences.getInstance();
     await sp.setBool(_keyPicaDefaultAll, val);
   }
+
+  /// 序列化所有自定义设置为 Map，用于用户数据备份与 WebDAV 同步
+  static Map<String, dynamic> toJson() => {
+        "autoCbz": autoCbz,
+        "embedComicInfo": embedComicInfo,
+        "translateTags": translateTags,
+        "deleteRaw": deleteRaw,
+        "ehDefaultNormalDownload": ehDefaultNormalDownload,
+        "jmDefaultDownloadAll": jmDefaultDownloadAll,
+        "picaDefaultDownloadAll": picaDefaultDownloadAll,
+      };
+
+  /// 从备份数据或 WebDAV 同步中恢复自定义配置
+  static Future<void> fromJson(Map<String, dynamic> json) async {
+    if (json.containsKey("autoCbz")) {
+      await setAutoCbz(json["autoCbz"] == true);
+    }
+    if (json.containsKey("embedComicInfo")) {
+      await setEmbedComicInfo(json["embedComicInfo"] == true);
+    }
+    if (json.containsKey("translateTags")) {
+      await setTranslateTags(json["translateTags"] == true);
+    }
+    if (json.containsKey("deleteRaw")) {
+      await setDeleteRaw(json["deleteRaw"] == true);
+    }
+    if (json.containsKey("ehDefaultNormalDownload")) {
+      await setEhDefaultNormalDownload(
+          json["ehDefaultNormalDownload"] == true);
+    }
+    if (json.containsKey("jmDefaultDownloadAll")) {
+      await setJmDefaultDownloadAll(json["jmDefaultDownloadAll"] == true);
+    }
+    if (json.containsKey("picaDefaultDownloadAll")) {
+      await setPicaDefaultDownloadAll(json["picaDefaultDownloadAll"] == true);
+    }
+  }
 }

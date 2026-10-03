@@ -21,6 +21,7 @@ import 'package:pica_comic/foundation/platform_utils.dart';
 import 'package:pica_comic/network/cookie_jar.dart';
 import 'package:pica_comic/network/download.dart';
 import 'package:pica_comic/network/download_model.dart';
+import 'package:pica_comic/utils/cbz_config.dart';
 import 'package:pica_comic/utils/io_extensions.dart';
 import 'package:pica_comic/utils/zip_utils.dart';
 
@@ -375,6 +376,10 @@ Future<String?> _exportData(String path, String appdataString,
     encode.addFile(localComicFolders.name, localComicFolders.path);
     encode.addFile(localAddComicUi.name, localAddComicUi.path);
     encode.addFile('cookies.db', "$path/cookies.db");
+    var cbzConfigFile = File("$path${pathSep}cbz_config.json");
+    if (cbzConfigFile.existsSync()) {
+      encode.addFile('cbz_config.json', cbzConfigFile.path);
+    }
     await for (var entry in Directory("$path/comic_source").list()) {
       if (entry is File) {
         encode.addFile('comic_source/${entry.name}', entry.path);
@@ -416,6 +421,10 @@ Future<String?> _exportData(String path, String appdataString,
     if (localAddComicMarker.existsSync()) {
       localAddComicMarker.deleteSync();
     }
+    final cbzConfigTemp = File("$path${pathSep}cbz_config.json");
+    if (cbzConfigTemp.existsSync()) {
+      cbzConfigTemp.deleteSync();
+    }
     for (final markerName in ['chapter_comments.marker', 'comic_comments.marker']) {
       final marker = File("$path${pathSep}$markerName");
       if (marker.existsSync()) {
@@ -429,6 +438,8 @@ Future<String?> _exportData(String path, String appdataString,
 Future<String> exportDataToFile(bool includeDownload, String outPath) async {
   var path = App.dataPath;
   try {
+    var cbzConfigFile = File("$path${pathSep}cbz_config.json");
+    cbzConfigFile.writeAsStringSync(const JsonEncoder().convert(CbzConfig.toJson()));
     var appdataString = const JsonEncoder().convert(appdata.toJson());
     var downloadPath = includeDownload ? DownloadManager().path : null;
     var res = await compute<List<String?>, String?>(
@@ -643,6 +654,10 @@ Future<bool> importData([String? filePath]) async {
       if (cookies.existsSync()) {
         cookies.copySync('$path/cookies.db');
       }
+      var cbzConfig = File('$path/dataTemp/cbz_config.json');
+      if (cbzConfig.existsSync()) {
+        cbzConfig.copySync('$path/cbz_config.json');
+      }
       var downloadData = Directory("$path/dataTemp/download");
       if (downloadData.existsSync()) {
         downloadPath.deleteSync(recursive: true);
@@ -712,6 +727,18 @@ Future<bool> importData([String? filePath]) async {
   await LocalFavoritesManager().readData();
   LocalFavoritesManager().updateUI();
   await HistoryManager().tryUpdateDb();
+  var cbzConfigFile = File("$path${pathSep}cbz_config.json");
+  if (cbzConfigFile.existsSync()) {
+    try {
+      var cbzJson = const JsonDecoder().convert(cbzConfigFile.readAsStringSync());
+      if (cbzJson is Map<String, dynamic>) {
+        await CbzConfig.fromJson(cbzJson);
+      }
+      cbzConfigFile.deleteSync();
+    } catch (e) {
+      LogManager.addLog(LogLevel.error, "importData", "Failed to restore CbzConfig: $e");
+    }
+  }
   return true;
 }
 
