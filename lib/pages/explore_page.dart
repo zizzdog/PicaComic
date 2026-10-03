@@ -450,7 +450,7 @@ class _MixedExplorePageState
   @override
   Widget buildContent(BuildContext context, List<Object> data) {
     return RefreshIndicator(
-      onRefresh: () async => refresh(),
+      onRefresh: () async => reset(),
       child: SmoothCustomScrollView(
         slivers: [
           ...buildSlivers(context, data),
