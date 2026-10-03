@@ -19,6 +19,7 @@ import 'package:pica_comic/foundation/history.dart';
 import 'package:pica_comic/network/eh_network/get_gallery_id.dart';
 import 'package:pica_comic/foundation/local_favorites.dart';
 import 'package:pica_comic/components/components.dart';
+import 'package:pica_comic/utils/cbz_config.dart';
 
 class EhGalleryPage extends BaseComicPage<Gallery> {
   EhGalleryPage(EhGalleryBrief brief, {super.key})
@@ -313,6 +314,11 @@ class EhGalleryPage extends BaseComicPage<Gallery> {
 
   @override
   void download() {
+    if (CbzConfig.ehDefaultNormalDownload) {
+      startDownload(0);
+      return;
+    }
+
     int current = 0;
     bool loading = true;
     ArchiveDownloadInfo? info;

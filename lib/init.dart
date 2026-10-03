@@ -40,6 +40,7 @@ import 'foundation/ohos_sqlite.dart';
 import 'foundation/platform_utils.dart';
 import 'network/nhentai_network/nhentai_main_network.dart';
 import 'package:pica_comic/utils/font_manager.dart';
+import 'package:pica_comic/utils/cbz_config.dart';
 
 Future<void> init() async {
   try {
@@ -52,7 +53,7 @@ Future<void> init() async {
           OhosSharedPreferencesStore("${App.dataPath}/shared_prefs.json");
     }
     await FontManager().init();
-    await FontManager().init();
+    await CbzConfig.init();
     io.File? logFile = io.File("${App.dataPath}/log.txt");
     if (App.isAndroid) {
       var externalDirectory = await getExternalStorageDirectory();

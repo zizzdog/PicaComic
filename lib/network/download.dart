@@ -32,6 +32,8 @@ import 'package:pica_comic/utils/extensions.dart';
 import 'package:pica_comic/utils/io_extensions.dart';
 import 'package:pica_comic/utils/io_tools.dart';
 import 'package:pica_comic/utils/translations.dart';
+import 'package:pica_comic/utils/cbz_builder.dart';
+import 'package:pica_comic/utils/cbz_reader.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 import 'nhentai_network/models.dart';
@@ -299,6 +301,7 @@ class DownloadManager with _DownloadDb implements Listenable {
     if (appdata.settings.length > 104 && appdata.settings[104] == "1") {
       await ComicCommentsHelper.fetchAndSave(downloadedItem);
     }
+    await CbzBuilder.packageDownloadedComic(downloadedItem, task.directory!);
     StateController.findOrNull<DownloadPageLogic>()?.refresh();
     StateController.findOrNull(tag: "me_page_downloads")?.update();
     if (downloading.isNotEmpty) {
@@ -373,6 +376,7 @@ class DownloadManager with _DownloadDb implements Listenable {
   Future<void> delete(List<String> ids) async {
     for (var id in ids) {
       _deleteFromDb(id);
+      CbzReader.deleteCbz(id);
       var comic = Directory("$path/${getDirectory(id)}");
       try {
         comic.delete(recursive: true);
@@ -394,6 +398,7 @@ class DownloadManager with _DownloadDb implements Listenable {
       if (comic.downloadedEps.length == 1) {
         return "Delete Error: only one downloaded episode";
       }
+      CbzReader.deleteEpisodeCbz(comic.id, ep + 1);
       if (Directory("$path/${getDirectory(comic.id)}/${ep + 1}").existsSync()) {
         Directory("$path/${getDirectory(comic.id)}/${ep + 1}")
             .deleteSync(recursive: true);
@@ -411,6 +416,10 @@ class DownloadManager with _DownloadDb implements Listenable {
 
   /// 获取漫画章节的长度, 适用于有章节的漫画
   Future<int> getEpLength(String id, int ep) async {
+    final cbz = CbzReader.findCbzFile(id, ep);
+    if (cbz != null) {
+      return CbzReader.getPageCount(cbz);
+    }
     var directory = Directory("$path/${getDirectory(id)}/$ep");
     var files = directory.list();
     return files.length;
@@ -418,6 +427,10 @@ class DownloadManager with _DownloadDb implements Listenable {
 
   /// 获取漫画的长度, 适用于无章节的漫画
   Future<int> getComicLength(String id) async {
+    final cbz = CbzReader.findCbzFile(id, 0) ?? CbzReader.findCbzFile(id, 1);
+    if (cbz != null) {
+      return CbzReader.getPageCount(cbz);
+    }
     var directory = Directory("$path/${getDirectory(id)}");
     var files = directory.list();
     return await files.length - 1;
@@ -470,7 +483,7 @@ class DownloadManager with _DownloadDb implements Listenable {
 
   ///获取封面, 所有漫画源通用
   File getCover(String id) {
-    return File("$path/${getDirectory(id)}/cover.jpg");
+    return CbzReader.getCoverFile(id);
   }
 }
 

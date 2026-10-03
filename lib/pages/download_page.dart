@@ -1529,6 +1529,34 @@ class _DownloadPageState extends State<DownloadPage> {
           tag: logic.comics[index].tags,
           category: categories,
           downloadTime: logic.comics[index].time,
+          onThumbnailTap: () {
+            // 短按左侧封面缩略图：方案 A - 直接打开完整漫画详情页
+            if (index < 0 ||
+                index >= logic.selected.length ||
+                index >= logic.comics.length) {
+              return;
+            }
+            if (logic.selecting) {
+              logic.selected[index] = !logic.selected[index];
+              logic.selected[index] ? logic.selectedNum++ : logic.selectedNum--;
+              if (logic.selectedNum == 0) {
+                logic.selecting = false;
+              }
+              logic.update();
+            } else {
+              toComicInfoPage(logic.comics[index]);
+            }
+          },
+          onThumbnailLongPress: () {
+            // 长按左侧封面缩略图：呼出原版离线二级抽屉（支持选话、单话管理、导出）
+            if (index < 0 ||
+                index >= logic.selected.length ||
+                index >= logic.comics.length) {
+              return;
+            }
+            if (logic.selecting) return;
+            showInfo(index, logic, context);
+          },
           onTap: () async {
             // 再次检查边界，防止在异步操作期间数组发生变化
             if (index < 0 ||
@@ -1545,7 +1573,8 @@ class _DownloadPageState extends State<DownloadPage> {
               }
               logic.update();
             } else {
-              showInfo(index, logic, context);
+              // 点击缩略图以外的区域：直接进入阅读器阅读第一章/从历史续读！
+              logic.comics[index].read();
             }
           },
           size: () {
@@ -2862,6 +2891,25 @@ class DownloadedComicTile extends ComicTile {
   final void Function() onTap;
   final void Function() onLongTap;
   final void Function(TapDownDetails details) onSecondaryTap;
+  final void Function()? onThumbnailTap;
+  final void Function()? onThumbnailLongPress;
+
+  const DownloadedComicTile({
+    required this.name,
+    required this.author,
+    required this.imagePath,
+    required this.type,
+    required this.tag,
+    required this.category,
+    required this.downloadTime,
+    required this.onTap,
+    required this.size,
+    required this.onLongTap,
+    required this.onSecondaryTap,
+    this.onThumbnailTap,
+    this.onThumbnailLongPress,
+    super.key,
+  });
 
   @override
   List<String>? get tags => tag
@@ -2895,10 +2943,15 @@ class DownloadedComicTile extends ComicTile {
   }
 
   @override
-  Widget get image => Image.file(
-        imagePath,
-        fit: BoxFit.cover,
-        height: double.infinity,
+  Widget get image => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onThumbnailTap,
+        onLongPress: onThumbnailLongPress,
+        child: Image.file(
+          imagePath,
+          fit: BoxFit.cover,
+          height: double.infinity,
+        ),
       );
 
   @override
@@ -2918,20 +2971,6 @@ class DownloadedComicTile extends ComicTile {
 
   @override
   String? get badge => type;
-
-  const DownloadedComicTile(
-      {required this.size,
-      required this.imagePath,
-      required this.author,
-      required this.name,
-      required this.onTap,
-      required this.onLongTap,
-      required this.onSecondaryTap,
-      required this.type,
-      required this.tag,
-      this.category,
-      this.downloadTime,
-      super.key});
 }
 
 void _toComicInfoPage(DownloadedItem comic) {

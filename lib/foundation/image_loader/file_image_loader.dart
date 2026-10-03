@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pica_comic/network/download.dart';
+import 'package:pica_comic/utils/cbz_reader.dart';
 
 class FileImageProvider extends ImageProvider<FileImageProvider> {
 
@@ -33,6 +34,11 @@ class FileImageProvider extends ImageProvider<FileImageProvider> {
       FileImageProvider key, {
         required ImageDecoderCallback decode,
       }) async {
+    final cbzBytes = await CbzReader.getImageBytesOrNull(id, ep, index);
+    if (cbzBytes != null) {
+      return decode(await ImmutableBuffer.fromUint8List(cbzBytes));
+    }
+
     var file = await DownloadManager().getImageAsync(id, ep, index);
     final int lengthInBytes = await file.length();
     if (lengthInBytes == 0) {

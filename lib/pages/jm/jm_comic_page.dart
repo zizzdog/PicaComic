@@ -3,6 +3,7 @@ import 'package:pica_comic/base.dart';
 import 'package:pica_comic/foundation/comic_source/built_in/jm.dart';
 import 'package:pica_comic/components/components.dart';
 import 'package:pica_comic/components/select_download_eps.dart';
+import 'package:pica_comic/utils/cbz_config.dart';
 import 'package:pica_comic/network/jm_network/jm_download.dart';
 import 'package:pica_comic/network/jm_network/jm_image.dart';
 import 'package:pica_comic/network/res.dart';
@@ -249,6 +250,19 @@ void downloadComic(JmComicInfo comic, BuildContext context) async {
         (await DownloadManager().getComicOrNull("jm${comic.id}"))!
         as DownloadedJmComic;
     downloaded.addAll(downloadedComic.downloadedEps);
+  }
+
+  if (CbzConfig.jmDefaultDownloadAll) {
+    var selected = List<int>.generate(eps.length, (i) => i)
+        .where((i) => !downloaded.contains(i))
+        .toList();
+    if (selected.isEmpty) {
+      showToast(message: "已全部下载".tl);
+    } else {
+      downloadManager.addJmDownload(comic, selected);
+      showToast(message: "已加入下载队列".tl);
+    }
+    return;
   }
 
   if (UiMode.m1(App.globalContext!)) {

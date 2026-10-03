@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pica_comic/foundation/comic_source/built_in/picacg.dart';
 import 'package:pica_comic/components/select_download_eps.dart';
+import 'package:pica_comic/utils/cbz_config.dart';
 import 'package:pica_comic/network/download.dart';
 import 'package:pica_comic/network/picacg_network/methods.dart';
 import 'package:pica_comic/foundation/ui_mode.dart';
@@ -286,6 +287,19 @@ void _downloadComic(
     var downloadedComic =
         (await DownloadManager().getComicOrNull(comic.id))! as DownloadedComic;
     downloaded.addAll(downloadedComic.downloadedEps);
+  }
+
+  if (CbzConfig.picaDefaultDownloadAll) {
+    var selected = List<int>.generate(eps.length, (i) => i)
+        .where((i) => !downloaded.contains(i))
+        .toList();
+    if (selected.isEmpty) {
+      showToast(message: "已全部下载".tl);
+    } else {
+      downloadManager.addPicDownload(comic, selected);
+      showToast(message: "已加入下载队列".tl);
+    }
+    return;
   }
   var content = SelectDownloadChapter(
     eps,

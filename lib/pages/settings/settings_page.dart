@@ -54,6 +54,7 @@ import 'package:pica_comic/utils/translations.dart';
 import 'package:pica_comic/utils/font_manager.dart';
 import 'package:pica_comic/pages/settings/font_management_page.dart';
 import 'package:pica_comic/pages/settings/file_manager_page.dart';
+import 'package:pica_comic/pages/settings/custom_settings.dart';
 import 'user_comments_page.dart';
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
 
@@ -1200,6 +1201,13 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
               child: Text('设置'.tl),
             ),
           ),
+        fluent.ListTile(
+          leading: const Icon(Icons.archive),
+          title: Text("CBZ 与快捷下载设置".tl),
+          subtitle: Text("自动打包 CBZ、ComicInfo 元数据、跳过下载弹窗".tl),
+          onPressed: () => context.to(() => const CustomSettingsPage()),
+          trailing: const Icon(Icons.arrow_right),
+        ),
         fluent.ListTile(
           title: Text("缓存大小".tl),
           subtitle: Text(bytesToReadableString(CacheManager().currentSize)),
@@ -2484,6 +2492,13 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
               child: Text('设置'.tl),
             ),
           ),
+        ListTile(
+          leading: const Icon(Icons.archive),
+          title: Text("CBZ 与快捷下载设置".tl),
+          subtitle: Text("自动打包 CBZ、ComicInfo 元数据、跳过下载弹窗".tl),
+          onTap: () => context.to(() => const CustomSettingsPage()),
+          trailing: const Icon(Icons.arrow_right),
+        ),
         ListTile(
           title: Text("缓存大小".tl),
           subtitle: Text(bytesToReadableString(CacheManager().currentSize)),
