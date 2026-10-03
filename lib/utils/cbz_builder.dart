@@ -216,11 +216,14 @@ class CbzBuilder {
       builder.element('Series', nest: item.name);
       builder.element('Number', nest: epNumber.toString());
 
+      // 提取带有命名空间的标签（仅在生成元数据时使用，不碰官方底层模型）
+      final rawTags = _extractTagsWithNamespace(item);
+
       // 智能提取作者与角色信息（对标 JHenTai 规范）
       final artists = <String>[];
       final characters = <String>[];
 
-      for (final tag in item.tags) {
+      for (final tag in rawTags) {
         if (tag.contains(':')) {
           final parts = tag.split(':');
           final ns = parts[0];
@@ -245,8 +248,8 @@ class CbzBuilder {
       builder.element('Genre', nest: 'Doujinshi');
 
       // 处理标签（支持中文化翻译，并完整保留命名空间前缀）
-      if (item.tags.isNotEmpty) {
-        final tagsList = item.tags.map((tag) {
+      if (rawTags.isNotEmpty) {
+        final tagsList = rawTags.map((tag) {
           if (tag.contains(':')) {
             final parts = tag.split(':');
             final ns = parts[0];
@@ -319,5 +322,19 @@ class CbzBuilder {
     }
     // 哔咔 (Picacg) 等纯移动端无网页版平台，直接返回 null，不写入 <Web>
     return null;
+  }
+
+  /// 抽取带命名空间的标签列表（仅为 ComicInfo.xml 使用，不污染官方原生模型）
+  static List<String> _extractTagsWithNamespace(DownloadedItem item) {
+    if (item is DownloadedGallery) {
+      final res = <String>[];
+      item.gallery.tags.forEach((key, value) {
+        for (var tag in value) {
+          res.add(key.isEmpty ? tag : "$key:$tag");
+        }
+      });
+      return res;
+    }
+    return item.tags;
   }
 }
