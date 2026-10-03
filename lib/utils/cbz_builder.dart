@@ -216,31 +216,60 @@ class CbzBuilder {
       builder.element('Series', nest: item.name);
       builder.element('Number', nest: epNumber.toString());
 
-      if (item.subTitle.isNotEmpty) {
-        builder.element('Writer', nest: item.subTitle);
-        builder.element('Penciller', nest: item.subTitle);
+      // 智能提取作者与角色信息（对标 JHenTai 规范）
+      final artists = <String>[];
+      final characters = <String>[];
+
+      for (final tag in item.tags) {
+        if (tag.contains(':')) {
+          final parts = tag.split(':');
+          final ns = parts[0];
+          final val = parts[1];
+          if (ns == 'artist') {
+            artists.add(val);
+          } else if (ns == 'character') {
+            characters.add(val);
+          }
+        }
+      }
+
+      String writer = item.subTitle;
+      if (artists.isNotEmpty) {
+        writer = artists.join(', ');
+      }
+      if (writer.isNotEmpty) {
+        builder.element('Writer', nest: writer);
+        builder.element('Penciller', nest: writer);
       }
 
       builder.element('Genre', nest: 'Doujinshi');
 
-      // 处理标签（支持中文化翻译）
+      // 处理标签（支持中文化翻译，并完整保留命名空间前缀）
       if (item.tags.isNotEmpty) {
         final tagsList = item.tags.map((tag) {
-          if (!CbzConfig.translateTags) return tag;
           if (tag.contains(':')) {
             final parts = tag.split(':');
             final ns = parts[0];
             final key = parts[1];
-            final transKey =
-                TagsTranslation.translationTagWithNamespace(key, ns);
-            final transNs =
-                TagsTranslation.tagsCategoryTranslationsCN[ns] ?? ns;
-            return "$transNs:$transKey";
+            if (CbzConfig.translateTags) {
+              final transKey =
+                  TagsTranslation.translationTagWithNamespace(key, ns);
+              final transNs =
+                  TagsTranslation.tagsCategoryTranslationsCN[ns] ?? ns;
+              return "$transNs:$transKey";
+            } else {
+              return "$ns:$key"; // 完整保留原汁原味的前缀！如 female:maid
+            }
+          } else {
+            return CbzConfig.translateTags ? tag.translateTagsToCN : tag;
           }
-          return tag.translateTagsToCN;
         }).join(', ');
 
         builder.element('Tags', nest: tagsList);
+      }
+
+      if (characters.isNotEmpty) {
+        builder.element('Characters', nest: characters.join(', '));
       }
 
       builder.element('PageCount', nest: pageCount.toString());

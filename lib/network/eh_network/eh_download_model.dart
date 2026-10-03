@@ -63,7 +63,11 @@ class DownloadedGallery extends DownloadedItem{
 
   List<String> _getTags(){
     var res = <String>[];
-    gallery.tags.forEach((key, value) => value.forEach((element) => res.add(element)));
+    gallery.tags.forEach((key, value) {
+      for (var element in value) {
+        res.add(key.isEmpty ? element : "$key:$element");
+      }
+    });
     return res;
   }
 
