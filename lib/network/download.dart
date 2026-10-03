@@ -375,18 +375,24 @@ class DownloadManager with _DownloadDb implements Listenable {
   ///删除已下载的漫画
   Future<void> delete(List<String> ids) async {
     for (var id in ids) {
-      _deleteFromDb(id);
-      CbzReader.deleteCbz(id);
-      var comic = Directory("$path/${getDirectory(id)}");
+      String? dirName;
       try {
-        comic.delete(recursive: true);
-      } catch (e) {
-        if (e is PathNotFoundException) {
-          //忽略
-        } else {
-          rethrow;
+        dirName = getDirectory(id);
+      } catch (_) {
+        dirName = id;
+      }
+      CbzReader.deleteCbz(id, dirName);
+      if (dirName != null) {
+        var comic = Directory("$path/$dirName");
+        try {
+          comic.delete(recursive: true);
+        } catch (e) {
+          if (e is! PathNotFoundException) {
+            //忽略
+          }
         }
       }
+      _deleteFromDb(id);
     }
     notifyListeners();
     StateController.findOrNull(tag: "me_page_downloads")?.update();
