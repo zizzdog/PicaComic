@@ -348,13 +348,16 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage> {
   }
 
   Widget buildPage() {
-    return SmoothCustomScrollView(
-      slivers: [
-        ..._buildPage(),
-        SliverToBoxAdapter(
-          child: SizedBox(height: bottomOverlayInsetOf(context)),
-        ),
-      ],
+    return RefreshIndicator(
+      onRefresh: () async => refresh(),
+      child: SmoothCustomScrollView(
+        slivers: [
+          ..._buildPage(),
+          SliverToBoxAdapter(
+            child: SizedBox(height: bottomOverlayInsetOf(context)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -446,14 +449,17 @@ class _MixedExplorePageState
 
   @override
   Widget buildContent(BuildContext context, List<Object> data) {
-    return SmoothCustomScrollView(
-      slivers: [
-        ...buildSlivers(context, data),
-        if (haveNextPage) const ListLoadingIndicator().toSliver(),
-        SliverToBoxAdapter(
-          child: SizedBox(height: bottomOverlayInsetOf(context)),
-        ),
-      ],
+    return RefreshIndicator(
+      onRefresh: () async => refresh(),
+      child: SmoothCustomScrollView(
+        slivers: [
+          ...buildSlivers(context, data),
+          if (haveNextPage) const ListLoadingIndicator().toSliver(),
+          SliverToBoxAdapter(
+            child: SizedBox(height: bottomOverlayInsetOf(context)),
+          ),
+        ],
+      ),
     );
   }
 

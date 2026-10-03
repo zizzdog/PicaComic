@@ -245,7 +245,29 @@ abstract class ComicsPage<T extends BaseComic> extends StatelessWidget {
                 }
               }
               if (comics.isEmpty) {
-                return SmoothCustomScrollView(
+                return RefreshIndicator(
+                  onRefresh: () async => logic.refresh(),
+                  child: SmoothCustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      if (title != null)
+                        SliverAppbar(
+                          title: Text(title!),
+                          actions: tailing != null ? [tailing!] : null,
+                        ),
+                      if (header != null) header!,
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: buildEmptyView(context),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return RefreshIndicator(
+                onRefresh: () async => logic.refresh(),
+                child: SmoothCustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
                     if (title != null)
                       SliverAppbar(
@@ -253,43 +275,29 @@ abstract class ComicsPage<T extends BaseComic> extends StatelessWidget {
                         actions: tailing != null ? [tailing!] : null,
                       ),
                     if (header != null) header!,
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: buildEmptyView(context),
+                    SliverGrid(
+                      delegate: SliverChildBuilderDelegate(
+                          childCount: comics.length, (context, i) {
+                        if (i == comics.length - 1) {
+                          logic.loadNextPage(getComics);
+                        }
+                        return buildItem(context, comics[i]);
+                      }),
+                      gridDelegate: SliverGridDelegateWithComics(),
                     ),
+                    if (logic.current < (logic.maxPage ?? 114514) &&
+                        logic.loadingData)
+                      const SliverToBoxAdapter(
+                        child: ListLoadingIndicator(),
+                      )
+                    else
+                      SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: listBottomInset,
+                        ),
+                      )
                   ],
-                );
-              }
-              return SmoothCustomScrollView(
-                slivers: [
-                  if (title != null)
-                    SliverAppbar(
-                      title: Text(title!),
-                      actions: tailing != null ? [tailing!] : null,
-                    ),
-                  if (header != null) header!,
-                  SliverGrid(
-                    delegate: SliverChildBuilderDelegate(
-                        childCount: comics.length, (context, i) {
-                      if (i == comics.length - 1) {
-                        logic.loadNextPage(getComics);
-                      }
-                      return buildItem(context, comics[i]);
-                    }),
-                    gridDelegate: SliverGridDelegateWithComics(),
-                  ),
-                  if (logic.current < (logic.maxPage ?? 114514) &&
-                      logic.loadingData)
-                    const SliverToBoxAdapter(
-                      child: ListLoadingIndicator(),
-                    )
-                  else
-                    SliverToBoxAdapter(
-                      child: SizedBox(
-                        height: listBottomInset,
-                      ),
-                    )
-                ],
+                ),
               );
             } else {
               List<T> comics = [];

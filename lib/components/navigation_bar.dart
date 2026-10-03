@@ -480,8 +480,18 @@ class NaviPaneState extends State<NaviPane>
     return PageTransitionsTheme(builders: builders);
   }
 
+  final Map<int, Widget> _loadedPages = {};
+
   Widget buildMainViewContent() {
-    return widget.pageBuilder(currentPage);
+    _loadedPages[currentPage] ??= widget.pageBuilder(currentPage);
+
+    return IndexedStack(
+      index: currentPage,
+      children: List.generate(
+        widget.paneItems.length,
+        (i) => _loadedPages[i] ?? const SizedBox.shrink(),
+      ),
+    );
   }
 
   Widget buildTop() {
