@@ -2,11 +2,9 @@ part of 'components.dart';
 
 class SmoothCustomScrollView extends StatelessWidget {
   const SmoothCustomScrollView(
-      {super.key, required this.slivers, this.controller, this.physics});
+      {super.key, required this.slivers, this.controller});
 
   final ScrollController? controller;
-
-  final ScrollPhysics? physics;
 
   final List<Widget> slivers;
 
@@ -14,10 +12,10 @@ class SmoothCustomScrollView extends StatelessWidget {
   Widget build(BuildContext context) {
     return SmoothScrollProvider(
       controller: controller,
-      builder: (context, controller, p) {
+      builder: (context, controller, physics) {
         return CustomScrollView(
           controller: controller,
-          physics: physics ?? p,
+          physics: physics,
           slivers: slivers,
         );
       },
